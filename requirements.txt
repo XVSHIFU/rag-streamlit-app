@@ -6,3 +6,5 @@ langchain-chroma
 chromadb
 python-dotenv
 zhipuai
+
+

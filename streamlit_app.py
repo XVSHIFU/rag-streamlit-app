@@ -11,6 +11,7 @@ from langchain_core.runnables import RunnableBranch, RunnablePassthrough
 # 向量数据库和 Embeddings
 from langchain_community.vectorstores import Chroma
 from langchain.embeddings.base import Embeddings
+from langchain.schema import Document
 
 # 智谱大模型
 from zhipuai_llm import ZhipuaiLLM
@@ -145,4 +146,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 

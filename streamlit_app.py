@@ -3,8 +3,7 @@ import os
 import sys
 from dotenv import load_dotenv
 
-# LangChain & ZhipuAI
-from langchain.chat_models import ChatOpenAI
+# LangChain 核心
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnableBranch, RunnablePassthrough
@@ -13,17 +12,20 @@ from langchain_core.runnables import RunnableBranch, RunnablePassthrough
 from langchain_community.vectorstores import Chroma
 from langchain.embeddings.base import Embeddings
 
+# 智谱大模型
+from zhipuai_llm import ZhipuaiLLM
+
 # 加载 .env (本地调试用)
 load_dotenv()
 
 
-# ----------- 自定义智谱 Embeddings 类（直接在 Cloud 上可用） -----------
+# ----------- 自定义智谱 Embeddings 类 -----------
 class ZhipuAIEmbeddings(Embeddings):
     def __init__(self):
         from zhipuai import ZhipuAI
         api_key = os.environ.get("ZHIPUAI_API_KEY")
         if not api_key:
-            raise ValueError("未提供 ZHIPUAI_API_KEY，请在 Secrets 中配置")
+            raise ValueError("未提供 ZHIPUAI_API_KEY，请在 Streamlit Secrets 中配置")
         self.client = ZhipuAI(api_key=api_key)
 
     def embed_documents(self, texts):
@@ -41,14 +43,13 @@ def get_retriever(documents=None):
     if documents is None:
         documents = [
             {"page_content": "南瓜书是《机器学习》（西瓜书）的配套辅导书，用于帮助理解西瓜书的内容。"},
-            {"page_content": "Prompt Engineering 是指为大语言模型设计和优化提示的技术。"}
+            {"page_content": "Prompt Engineering 是为大语言模型设计和优化提示的技术。"}
         ]
 
-    # 在 Cloud 上生成 Chroma 数据库（内存或临时目录）
     vectordb = Chroma.from_documents(
         documents,
         embedding_function=embedding,
-        persist_directory=None  # 不写入磁盘
+        persist_directory=None  # Cloud 上不写入磁盘
     )
     return vectordb.as_retriever(search_kwargs={"k": 3})
 
@@ -61,7 +62,7 @@ def combine_docs(docs):
 # ----------- 构建 QA 链 -----------
 def get_qa_history_chain():
     retriever = get_retriever()
-    llm = ChatOpenAI(model_name="gpt-4o", temperature=0)
+    llm = ZhipuaiLLM(model_name="glm-4-plus", temperature=0.1, api_key=os.environ.get("ZHIPUAI_API_KEY"))
 
     condense_question_prompt = ChatPromptTemplate([
         ("system", "请根据聊天记录总结用户最近的问题，如果没有多余聊天记录则返回用户的问题。"),

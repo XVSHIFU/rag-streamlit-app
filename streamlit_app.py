@@ -40,11 +40,14 @@ def get_retriever(documents=None):
     embedding = ZhipuAIEmbeddings()
 
     # 如果没有传文档，使用示例文档
-    if documents is None:
-        documents = [
-            {"page_content": "南瓜书是《机器学习》（西瓜书）的配套辅导书，用于帮助理解西瓜书的内容。"},
-            {"page_content": "Prompt Engineering 是为大语言模型设计和优化提示的技术。"}
-        ]
+    # 2. 构建文档列表（示例）
+    documents_dict_list = [
+        {"page_content": "Prompt Engineering 是为大语言模型设计和优化提示语的方法", "metadata": {}}
+    ]
+    
+    # 3. 转成 Document 对象
+    documents = [Document(page_content=d["page_content"], metadata=d.get("metadata", {}))
+                 for d in documents_dict_list]
 
     vectordb = Chroma.from_documents(
         documents,
@@ -142,3 +145,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
